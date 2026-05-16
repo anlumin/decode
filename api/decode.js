@@ -87,13 +87,13 @@ export default async function handler(req, res) {
     // Strip markdown code fences
     const cleanedText = generatedText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
 
-    // Parse JSON
+    // Try to parse as JSON, fallback to plain text for follow-up questions
     let parsedResult;
     try {
       parsedResult = JSON.parse(cleanedText);
     } catch (error) {
-      console.error('JSON parse error:', error);
-      return res.status(500).json({ error: 'Failed to parse AI response' });
+      // If JSON parsing fails, return the raw text (for follow-up questions)
+      parsedResult = cleanedText;
     }
 
     // Return the result
