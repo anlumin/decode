@@ -54,6 +54,7 @@ CRITICAL INSTRUCTIONS:
 - The response must be parseable by JSON.parse()
 
 Return your analysis now:`;
+}
 
 /**
  * Build a follow-up prompt that includes context from the original text and clarity report
@@ -88,7 +89,6 @@ Provide a clear, actionable, and helpful answer to the user's question. Consider
 - Focused on helping them take action
 
 Respond naturally in plain text (not JSON). Keep your answer concise but complete.`;
-}
 }
 
 // Made with Bob
