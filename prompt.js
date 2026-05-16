@@ -54,6 +54,41 @@ CRITICAL INSTRUCTIONS:
 - The response must be parseable by JSON.parse()
 
 Return your analysis now:`;
+
+/**
+ * Build a follow-up prompt that includes context from the original text and clarity report
+ * @param {string} originalText - The original text that was analyzed
+ * @param {object} clarityReport - The clarity report object with what_asked, unclear_or_missing, etc.
+ * @param {string} question - The user's follow-up question
+ * @returns {string} - The formatted prompt for the AI
+ */
+function buildFollowUpPrompt(originalText, clarityReport, question) {
+  return `You are Bob, an expert communication advisor helping someone understand and respond to unclear text.
+
+CONTEXT - Original text that was analyzed:
+"""
+${originalText}
+"""
+
+CONTEXT - Clarity analysis that was provided:
+- What's actually being asked: ${clarityReport.what_asked}
+- What's unclear or missing: ${clarityReport.unclear_or_missing.join('; ')}
+- Questions worth asking back: ${clarityReport.questions_to_ask.join('; ')}
+- What success looks like: ${clarityReport.success_looks_like}
+
+USER'S FOLLOW-UP QUESTION:
+"""
+${question}
+"""
+
+Provide a clear, actionable, and helpful answer to the user's question. Consider the full context of both the original text and the clarity analysis. Your response should be:
+- Direct and practical
+- Specific to their situation
+- Written in a friendly but professional tone
+- Focused on helping them take action
+
+Respond naturally in plain text (not JSON). Keep your answer concise but complete.`;
+}
 }
 
 // Made with Bob
