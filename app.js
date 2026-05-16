@@ -1,7 +1,5 @@
 // State management
 let selectedType = 'assignment';
-let originalText = '';
-let clarityReport = null;
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', () => {
@@ -60,10 +58,6 @@ async function runDecode() {
     
     // Call serverless function
     const response = await callDecodeAPI(prompt);
-    
-    // Store original text and clarity report for follow-ups
-    originalText = inputText;
-    clarityReport = response;
     
     // Parse and render results
     renderResults(inputText, response);
@@ -203,18 +197,6 @@ function goBack() {
   
   outputScreen.style.display = 'none';
   inputScreen.style.display = 'block';
-  
-  // Clear follow-up answers when going back
-  const followupAnswers = document.getElementById('followupAnswers');
-  if (followupAnswers) {
-    followupAnswers.innerHTML = '';
-  }
-  
-  // Clear follow-up input
-  const followupInput = document.getElementById('followupInput');
-  if (followupInput) {
-    followupInput.value = '';
-  }
 }
 
 // Show error message
@@ -232,103 +214,3 @@ function escapeHtml(text) {
 }
 
 // Made with Bob
-
-// Follow-up question functionality
-async function askFollowUp() {
-  const followupInput = document.getElementById('followupInput');
-  const followupLoader = document.getElementById('followupLoader');
-  const followupBtn = document.getElementById('followupBtn');
-  const followupAnswers = document.getElementById('followupAnswers');
-  
-  // Validate input
-  const question = followupInput.value.trim();
-  if (!question) {
-    alert('Please enter a question.');
-    return;
-  }
-  
-  if (!originalText || !clarityReport) {
-    alert('No clarity report available. Please decode text first.');
-    return;
-  }
-  
-  // Disable button and show loader
-  followupBtn.disabled = true;
-  followupLoader.classList.add('active');
-  
-  try {
-    // Build follow-up prompt using the external buildFollowUpPrompt function
-    const prompt = buildFollowUpPrompt(originalText, clarityReport, question);
-    
-    // Call serverless function
-    const response = await fetch('/api/decode', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ prompt })
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || 'Failed to process request. Please try again.');
-    }
-    
-    const data = await response.json();
-    
-    // For follow-up questions, the response is plain text, not JSON
-    // The API returns it in data.result which might be an object or string
-    let answerText;
-    if (typeof data.result === 'string') {
-      answerText = data.result;
-    } else if (data.result && data.result.generated_text) {
-      answerText = data.result.generated_text;
-    } else {
-      answerText = JSON.stringify(data.result);
-    }
-    
-    // Render the answer
-    renderFollowUpAnswer(question, answerText);
-    
-    // Clear input
-    followupInput.value = '';
-    
-  } catch (error) {
-    console.error('Follow-up error:', error);
-    alert(error.message || 'An error occurred while processing your question. Please try again.');
-  } finally {
-    // Re-enable button and hide loader
-    followupBtn.disabled = false;
-    followupLoader.classList.remove('active');
-  }
-}
-
-// Render a follow-up answer
-function renderFollowUpAnswer(question, answer) {
-  const followupAnswers = document.getElementById('followupAnswers');
-  
-  const answerDiv = document.createElement('div');
-  answerDiv.className = 'followup-answer';
-  
-  const questionDiv = document.createElement('div');
-  questionDiv.className = 'followup-question';
-  questionDiv.textContent = escapeHtml(question);
-  
-  const responseDiv = document.createElement('div');
-  responseDiv.className = 'followup-response';
-  
-  // Split answer into paragraphs and render
-  const paragraphs = answer.split('\n\n').filter(p => p.trim());
-  paragraphs.forEach(para => {
-    const p = document.createElement('p');
-    p.textContent = escapeHtml(para.trim());
-    responseDiv.appendChild(p);
-  });
-  
-  answerDiv.appendChild(questionDiv);
-  answerDiv.appendChild(responseDiv);
-  followupAnswers.appendChild(answerDiv);
-  
-  // Scroll to the new answer
-  answerDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-}
